@@ -6,17 +6,21 @@ namespace MassTransitInMemoryBus
     {
         public static async void Process()
         {
+            // aqui é criado um barramento em memory
             var bus = Bus.Factory.CreateUsingInMemory(sbc =>
             {
+                // também é criado um received point que aponta para a fica "order_queue" In-Memory
                 sbc.ReceiveEndpoint("order_queue", ep =>
                 {
+                    // nesse handler é capturado toda mensagem tipada na qual foi publicada na fica em questão,
                     ep.Handler<Message>(context =>
                     {
-                        return Console.Out.WriteLineAsync($"Received: {context.Message.Text}");
+                        return Console.Out.WriteLineAsync($"Mensagem Recebida: {context.Message.Text}");
                     });
                 });
             });
 
+            // aqui é feito o start do barramento, IMPORTANTE É DAR O STOP QUANDO NAO USADO MAIS.
             await bus.StartAsync();
 
             try
@@ -24,11 +28,11 @@ namespace MassTransitInMemoryBus
                 var index = 0;
                 while (true)
                 {
-
+                    // Publicação  da devida mensagem
                     object p = bus.Publish(new Message
                     {
                         OrderId = index,
-                        Text = $"{DateTime.UtcNow} => message index order: {index++}"
+                        Text = $"{DateTime.UtcNow} => messagem publicada com index order: {index++}"
                     });
 
                     await Task.Run(() => Thread.Sleep(1000));
@@ -45,7 +49,7 @@ namespace MassTransitInMemoryBus
         }
 
 
-        public class Message
+        internal class Message
         {
             public int OrderId { get; set; }
             public string Text { get; set; }
